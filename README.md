@@ -130,21 +130,3 @@ Surgical-Skill-JIGSAWS
 ```
 
 ---
-
-## 8. Citation
-
-If you use this code, please cite:
-
-```
-
-@misc{oh2025surgicalskill,
-author       = {Oh, Seoyoung},
-title        = {Surgical Skill Assessment Using Kinematic Features and Deep Learning on the JIGSAWS Dataset},
-year         = {2025},
-publisher    = {GitHub},
-howpublished = {\url{[https://github.com/5seoyoung/Surgical-Skill-JIGSAWS}}](https://github.com/5seoyoung/Surgical-Skill-JIGSAWS}})
-}
-
-```
-
----
