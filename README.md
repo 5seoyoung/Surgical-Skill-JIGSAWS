@@ -1,162 +1,150 @@
-# Surgical Skill Assessment Using Kinematic Features and Deep Learning on the JIGSAWS Dataset
+# Surgical-Skill-JIGSAWS
 
-This repository contains the implementation of our research project on **objective surgical skill assessment** using kinematic features and sequence-based deep learning models.  
-We systematically compare interpretable handcrafted motion features with machine learning (ML) models and sequence-based deep learning (DL) approaches on the **JIGSAWS dataset**.
+Surgical Skill Assessment Using Kinematic Features and Deep Learning on the JIGSAWS Dataset  
+Oh Seoyoung (Kookmin University)
 
 ---
 
-## 1. Project Overview
+## 1. Description
 
-- **Goal**: To evaluate whether interpretable kinematic features can serve as reliable indicators of surgical expertise, and how they compare with black-box deep learning models.  
-- **Dataset**: JIGSAWS (Knot-Tying, Needle-Passing, Suturing tasks).  
-- **Features**:  
-  - Basic: Path length, Straightness, Mean/Max velocity, Pause ratio, Frequency energy.  
-  - Extended: Jerk mean/std, Bimanual coordination, Spectral bandpower (0.5–3 Hz, 3–6 Hz), Trajectory dispersion.  
-- **Models**:  
-  - Machine Learning: SVM (RBF kernel), XGBoost.  
-  - Deep Learning: 2-layer LSTM.  
-- **Evaluation**: Accuracy, Macro-F1, Ablation study, Feature importance analysis, Visualization of trajectories.
+This repository implements a systematic study on **objective surgical skill assessment** using the JIGSAWS dataset.  
+We benchmarked **handcrafted kinematic features** against **sequence-based deep learning models**, highlighting both performance and interpretability.
+
+- **Why important?**  
+  Objective and automated evaluation of surgical skills is crucial for education, feedback, and credentialing [1].  
+  Deep learning models have achieved strong performance, but their **black-box nature** limits interpretability, reproducibility, and trust in clinical adoption [2].  
+  In contrast, **kinematic features** provide explainable evidence (smoothness, rhythmicity, efficiency) that can be directly connected to surgical pedagogy and training.
+
+- **Our contribution:**  
+  - Verified which motion descriptors (e.g., smoothness, rhythmicity) best separate skill levels.  
+  - Showed that interpretable features can approximate deep learning accuracy while offering transparency.  
+  - Proposed a pathway for integrating explainable metrics into **surgical training, feedback systems, and certification frameworks**.
 
 ---
 
 ## 2. Dataset
 
-The JIGSAWS dataset is not included in this repository due to size and license restrictions.  
-You must download it manually from the official source:
+- **JIGSAWS** (Knot-Tying, Needle-Passing, Suturing)  
+- Robotic kinematic data (76 dimensions)  
+- Sliding window segmentation: 10s (stride 1s)  
+- Labels: Novice (87), Intermediate (65), Expert (52) → total 204 samples  
+- Download: [JIGSAWS official site](https://cirl.lcsr.jhu.edu/research/hmm/datasets/jigsaws_release/)  
 
-➡ [JIGSAWS dataset download page](https://cirl.lcsr.jhu.edu/research/hmm/datasets/jigsaws_release/)
-
-After downloading, place the dataset under the `data/` directory.
+Dataset is not included in this repository due to licensing and size restrictions.  
+Users must **manually download** it from the official source above.
 
 ---
 
-## 3. Repository Structure
+## 3. Methods
+
+- **Preprocessing**  
+  - Time alignment, outlier removal, resampling @ 50 Hz  
+  - Tooltip coordinate extraction, z-score normalization per trial  
+
+- **Feature Engineering**  
+  - **Basic (6):** Path length, Straightness, Mean/Max velocity, Pause ratio, Frequency energy  
+  - **Extended (6):**  
+    - `jerk_mean`, `jerk_std`: smoothness (fine vibration)  
+    - `bandpower (0.5–3 Hz, 3–6 Hz)`: rhythmicity of motion  
+    - `disp_std`: spatial dispersion (stability)  
+    - `bimanual_corr`: degree of coordination between both hands  
+
+- **Modeling**  
+  - Machine Learning: SVM (RBF), XGBoost  
+  - Deep Learning: 2-layer LSTM (sequence input)  
+  - Class imbalance handled by class weights & subsampling  
+
+- **Evaluation**  
+  - Metrics: Accuracy, Macro-F1  
+  - Ablation study for feature contribution  
+  - Permutation importance (macro-F1 drop)  
+  - Group-level differences: Kruskal–Wallis test  
+  - Visualization: XY density maps, 3D trajectories  
+
+---
+
+## 4. Results
+
+- **Performance**  
+  - XGBoost (basic features): Macro-F1 = 0.68  
+  - XGBoost (extended features): Macro-F1 = **0.83**  
+  - LSTM (raw sequence): Macro-F1 = **0.89**  
+
+- **Ablation Study (XGB)**  
+  - Removing jerk → ΔF1 −0.12 (largest drop)  
+  - Removing bandpower → ΔF1 −0.06  
+  - Removing bimanual_corr → negligible (ΔF1 −0.006)  
+
+- **Feature Importance**  
+  - Top: `jerk_mean (0.169)`, `bandpower 3–6Hz (0.095)`  
+  - Secondary: `path_len (0.072)`, `max_v (0.022)`  
+  - Minimal: `straight`, `mean_v` (≈ 0.000)  
+
+- **Key Insight**  
+  - **Smoothness (jerk) and Rhythmicity (bandpower)** are the most robust markers of surgical expertise.  
+  - Interpretable features alone can nearly match deep learning, enabling **transparent, reproducible, and educationally relevant assessment**.
+
+---
+
+## 5. Discussion
+
+- This study provides a **practical and explainable approach** for surgical skill evaluation.  
+- Insights:  
+  - Smoothness (jerk) → differentiates unstable novice motion vs. stable expert motion  
+  - Rhythmicity (bandpower) → highlights periodic, efficient expert patterns  
+- Implications:  
+  - Can guide **curriculum design** for surgical education  
+  - Useful for **feedback systems** to provide interpretable metrics  
+  - Potential to support **objective credentialing frameworks** in clinical practice  
+
+---
+
+## 6. References
+
+[1] Martin, J. A., Regehr, G., Reznick, R., MacRae, H., Murnaghan, J., Hutchison, C., & Brown, M. (1997). Objective structured assessment of technical skill (OSATS) for surgical residents. *The British Journal of Surgery*, 84(2), 273–278.  
+[2] Hung, A. J., Chen, J., Gill, I. S., & 9 others. (2019). Deep learning using automated surgical performance analysis: Technical and methodological considerations. *European Urology Focus*, 5(5), 837–839.  
+
+---
+
+## 7. Repository Structure
 
 ```
 
 Surgical-Skill-JIGSAWS
-├── data/                     # Raw JIGSAWS data (to be downloaded separately)
-├── out/                      # Output directory (figures, results, cache)
-│   ├── ablation/             # Ablation study results
-│   ├── featimp/              # Feature importance results
-│   ├── featdist/             # Feature distributions (boxplots, violins)
-│   ├── compare/              # Novice vs Expert trajectory comparisons
-│   ├── dl/                   # Deep learning (LSTM) results
-│   ├── ml\*/                  # Machine learning (SVM, XGB) results
-│   ├── replay/               # 3D trajectory replay (gif/png)
-│   └── figs/                 # Summary figures and tables
-├── src/                      # Source code
-│   ├── 00\_prepare.py         # Dataset preparation
-│   ├── 01\_features.py        # Feature extraction
-│   ├── 02\_ml\_baseline.py     # ML baseline models (SVM, XGB)
-│   ├── 03\_dl\_models.py       # LSTM training and evaluation
-│   ├── 04\_stats\_plots.py     # Statistical analysis and plots
-│   ├── 05\_ablation.py        # Ablation experiments
-│   ├── 06\_feat\_importance.py # Feature importance analysis
-│   ├── 07\_summary\_figure.py  # Generate summary figure
-│   ├── 08\_extra\_plots.py     # Additional visualization
-│   ├── 09\_replay\_3d.py       # 3D trajectory replay
-│   ├── 10\_compare\_trajectories.py # Novice vs Expert comparison
-│   ├── 10\_pick\_trials.py     # Select representative trials
-│   ├── 11\_feature\_distributions.py # Feature distribution plots
-│   └── utils.py              # Utility functions
-├── requirements.txt          # Python dependencies
-├── README.md                 # Project documentation
-└── test.ipynb                # Example notebook
+├── data/                 # dataset directory (empty, user must download JIGSAWS)
+├── src/                  # source code
+│   ├── 00\_prepare.py
+│   ├── 01\_features.py
+│   ├── 02\_ml\_baseline.py
+│   ├── 03\_dl\_models.py
+│   ├── ...
+├── out/                  # experiment outputs
+│   ├── ablation/
+│   ├── featimp/
+│   ├── featdist/
+│   ├── dl/
+│   ├── ml/
+│   └── figs/
+└── README.md
 
-````
-
----
-
-## 4. Installation
-
-Create a new environment and install dependencies:
-
-```bash
-python3 -m venv cephalo-env
-source cephalo-env/bin/activate
-pip install -r requirements.txt
-````
-
----
-
-## 5. Usage
-
-### Step 1. Prepare features
-
-```bash
-python src/01_features.py
-```
-
-### Step 2. Train ML baseline models (SVM, XGB)
-
-```bash
-python src/02_ml_baseline.py
-```
-
-### Step 3. Train DL model (LSTM)
-
-```bash
-python src/03_dl_models.py
-```
-
-### Step 4. Run ablation study
-
-```bash
-python src/05_ablation.py
-```
-
-### Step 5. Feature importance
-
-```bash
-python src/06_feat_importance.py
-```
-
-### Step 6. Visualizations
-
-```bash
-python src/11_feature_distributions.py
-```
-
-Outputs will be saved in the `out/` directory.
-
----
-
-## 6. Results (Summary)
-
-* **Macro-F1**:
-
-  * XGBoost (basic features): 0.68
-  * XGBoost (extended features): 0.83
-  * LSTM: 0.89
-
-* **Key Findings**:
-
-  * Jerk (smoothness) and Bandpower 3–6 Hz (rhythmicity) are the most discriminative features.
-  * Handcrafted interpretable features achieve performance close to deep learning models.
-  * Provides explainability and educational value for surgical training and credentialing.
-
----
-
-## 7. Citation
-
-If you use this repository, please cite our work:
-
-```
-Oh S. Surgical Skill Assessment Using Kinematic Features and Deep Learning on the JIGSAWS Dataset.
-Medical Metaverse Society Autumn Conference, 2025.
 ```
 
 ---
 
-## 8. Contact
+## 8. Citation
 
-For questions or collaboration, please contact:
+If you use this code, please cite:
 
-* **Author**: Seoyoung Oh
-* **Affiliation**: Dept. of AI Big Data Convergence & Management, Kookmin University, Seoul, Republic of Korea
-* **Email**: [5seo0\_oh@kookmin.ac.kr](mailto:5seo0_oh@kookmin.ac.kr)
-* **GitHub**: [https://github.com/5seo0yong/Surgical-Skill-JIGSAWS](https://github.com/5seo0yong/Surgical-Skill-JIGSAWS)
+```
+
+@misc{oh2025surgicalskill,
+author       = {Oh, Seoyoung},
+title        = {Surgical Skill Assessment Using Kinematic Features and Deep Learning on the JIGSAWS Dataset},
+year         = {2025},
+publisher    = {GitHub},
+howpublished = {\url{[https://github.com/5seoyoung/Surgical-Skill-JIGSAWS}}](https://github.com/5seoyoung/Surgical-Skill-JIGSAWS}})
+}
+
+```
 
 ---
-
